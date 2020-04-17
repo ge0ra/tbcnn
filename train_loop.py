@@ -34,7 +34,7 @@ def augment(image, label, size):
 
     return image, label
 
-def train_net(training, test, size=512, epochs=400, batch_size=4, logging_interval=5, run_name=None):
+def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interval=5, run_name=None):
     """Train network using the given training and test data.
     """
 
