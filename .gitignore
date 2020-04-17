@@ -7,3 +7,4 @@ input*
 *.pyc
 cuda9/
 submitted.sql3
+checkpoints/*
