@@ -34,7 +34,7 @@ def augment(image, label, size):
 
     return image, label
 
-def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interval=5, run_name=None):
+def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interval=5, run_name=None, load_checkpoint=False, save_checkpoint=False):
     """Train network using the given training and test data.
     """
 
@@ -78,8 +78,19 @@ def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interv
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as sess:
-        # Initialize weights
-        sess.run(tf.global_variables_initializer())
+
+        # Add ops to save and restore all the variables.
+        saver = tf.train.Saver()
+        currentDirectory = os.getcwd()
+
+        if not load_checkpoint:
+            # Initialize weights
+            sess.run(tf.global_variables_initializer())
+        else:
+            # Restore variables from disk.
+            saver.restore(sess, currentDirectory + "/checkpoints/model.ckpt")
+            print("Model restored.")
+
         # Initialite tensorboard
         progress.init_run(run_name)
 
@@ -145,3 +156,7 @@ def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interv
                 'Epoch {:>3} | Time: {:>3.0f} s | Acc: {:>5.3f} (Test: {:>5.3f}) | AUC: {:>5.3f} (Test: {:>5.3f})'
                     .format(e, elapsed, accuracy, test_accuracy, auc, test_auc)
             )
+        
+        if save_checkpoint:
+            # Save the variables to disk.
+            save_path = saver.save(sess, currentDirectory + "/checkpoints/model.ckpt")
