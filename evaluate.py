@@ -10,6 +10,7 @@ import tensorflow as tf
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import sklearn
+import ipdb
 
 # Own modules
 import preprocess
@@ -72,9 +73,9 @@ inp_var, labels_var, output = net.generate_network(SIZE)
 error_fn, train_fn, metrics = net.generate_functions(inp_var, labels_var, output)
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
+#config.gpu_options.allow_growth = True
 
-with tf.Session(config=config) as sess:
+with tf.Session() as sess:
 
     # Restore all the variables.
     saver = tf.train.Saver()
@@ -99,7 +100,7 @@ with tf.Session(config=config) as sess:
         })
 
         print('Test image {} / {}'.format(ti + 1, len(test_images)), end='\r')
-
+    
     # Compute test metrics
     test_accuracy = sess.run(accuracy_fn)
     test_auc = sess.run(auc_fn)
