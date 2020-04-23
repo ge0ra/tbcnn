@@ -170,3 +170,13 @@ Montgomery dataset.
 
 #### Test AUC
 ![Test AUC](./results/test_AUC_1.png)
+
+## Temporary results
+
+The model does not generalize well. Trained on Montgomery (400 epochs) and tested on Shenzen gives bad results:
+
+![Test on Shenzen](./results/MC_CH.png)
+
+Similarly, trained on Montgomery and Shenzen (240 epochs) and tested on TBX:
+
+![Test on TBX](./results/MCCH_TBX.png)

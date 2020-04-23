@@ -75,7 +75,7 @@ def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interv
     metrics_summary = progress.create_metrics_summary(metrics)
 
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
+    #config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as sess:
 

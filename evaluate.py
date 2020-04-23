@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import sklearn
+from sklearn.metrics import roc_curve
 import ipdb
 
 # Own modules
@@ -32,7 +32,7 @@ def relPath(dir):
     return os.path.join(os.path.dirname(__file__), dir)
 
 def plot_roc(name, labels, predictions, **kwargs):
-    #fp, tp, _ = sklearn.metrics.roc_curve(labels, predictions)
+    fp, tp, threshold = roc_curve(labels, predictions)
     plt.plot(100*fp, 100*tp, label=name, linewidth=2, **kwargs)
     plt.xlabel('False positives [%]')
     plt.ylabel('True positives [%]')
@@ -55,12 +55,12 @@ print('Preparing input...')
 prepare_input.prepare(relPath('preprocessed'), relPath('input'))
 
 # Load data
-images = np.load(relPath('input') + '.npy', mmap_mode='r')
-labels = np.load(relPath('input') + '_labels.npy', mmap_mode='r')
+test_images = np.load(relPath('input') + '.npy', mmap_mode='r')
+test_labels = np.load(relPath('input') + '_labels.npy', mmap_mode='r')
 
 # Create training and test sets
-training, test = train_variants.split_train_and_test(images, labels)
-test_images, test_labels = test
+#training, test = train_variants.split_train_and_test(images, labels)
+#test_images, test_labels = test
 
 # Crop center from test images
 border = (test_images.shape[1] - SIZE) // 2
@@ -84,33 +84,54 @@ with tf.Session() as sess:
 
     # Initialize accuracy calculation
     sess.run(tf.local_variables_initializer())
-    sess.run(tf.global_variables_initializer())
 
     # Get needed functions
     accuracy_fn, accuracy_update = metrics['accuracy']
     auc_fn, auc_update = metrics['AUC']
-    fp_fn, fp_update = metrics['fp']
-    tp_fn, tp_update = metrics['tp']
-
+    #fp_fn, fp_update = metrics['fp']
+    #tp_fn, tp_update = metrics['tp']
+    computed_probabilities = []
+    computed_logits = []
+    computed_classes = []
+    labels = []
     # Accuracy on test
     for ti, (img, lab) in enumerate(zip(test_images, test_labels)):
+        labels.append(lab)
+        print(sess.run(output, {
+            'input:0': img.reshape(1, SIZE, SIZE, -1),
+            'labels:0': [lab],
+        }))
+
+        computed_classes.append(sess.run(output['classes'][0], {
+            'input:0': img.reshape(1, SIZE, SIZE, -1),
+            'labels:0': [lab],
+        }))
+
+        computed_probabilities.append(max(sess.run(output['probabilities'][:,1], {
+            'input:0': img.reshape(1, SIZE, SIZE, -1),
+            'labels:0': [lab],
+        })))
+
         sess.run([accuracy_update, auc_update], {
             'input:0': img.reshape(1, SIZE, SIZE, -1),
             'labels:0': [lab],
         })
-
+        
         print('Test image {} / {}'.format(ti + 1, len(test_images)), end='\r')
     
     # Compute test metrics
     test_accuracy = sess.run(accuracy_fn)
     test_auc = sess.run(auc_fn)
-    test_fp = sess.run(fp_fn)
-    test_tp = sess.run(tp_fn)
+    #test_fp = sess.run(fp_fn)
+    #test_tp = sess.run(tp_fn)
 
-    #plot_roc("Test Baseline", test_labels, output, color=colors[0], linestyle='--')
-
+    plot_roc("Test Baseline", test_labels, computed_classes, color=colors[0], linestyle='--')
+    print(labels)
+    print(computed_classes)
+    print(computed_probabilities)
     # Print progress
     print(
         'Accuracy: {:>5.3f} | AUC: {:>5.3f}'
             .format(test_accuracy, test_auc)
     )
+    #ipdb.set_trace()
