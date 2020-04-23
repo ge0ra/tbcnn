@@ -180,3 +180,7 @@ The model does not generalize well. Trained on Montgomery (400 epochs) and teste
 Similarly, trained on Montgomery and Shenzen (240 epochs) and tested on TBX:
 
 ![Test on TBX](./results/MCCH_TBX.png)
+
+### Datasets images comparison
+
+![Datasets comparision](./results/grid_datasets.jpg)
