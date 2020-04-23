@@ -3,6 +3,7 @@ logs/*
 shenzhen/*
 montgomery/*
 preprocessed/*
+data/*
 input*
 *.pyc
 cuda9/
