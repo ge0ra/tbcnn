@@ -3,9 +3,10 @@ logs/*
 shenzhen/*
 montgomery/*
 preprocessed/*
-data/*
+data
 input*
 *.pyc
 cuda9/
 submitted.sql3
 checkpoints/*
+results/graphs

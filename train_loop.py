@@ -5,10 +5,15 @@ import time
 from datetime import datetime
 import numpy as np
 import tensorflow as tf
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
 
 import net
 from deformations import elastically_deform_image_2d
 import progress
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 # Remove tf annoying logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
@@ -34,7 +39,19 @@ def augment(image, label, size):
 
     return image, label
 
-def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interval=5, run_name=None, load_checkpoint=False, save_checkpoint=False):
+def plot_roc(name, labels, predictions, e, **kwargs):
+    fp, tp, threshold = roc_curve(labels, predictions)
+    plt.plot(100*fp, 100*tp, label=name, linewidth=2, **kwargs)
+    plt.xlabel('False positives [%]')
+    plt.ylabel('True positives [%]')
+    #plt.xlim([-0.5,20])
+    #plt.ylim([80,100.5])
+    plt.grid(True)
+    ax = plt.gca()
+    ax.set_aspect('equal')
+    plt.savefig(os.getcwd() + '/results/graphs/' + str(e) + '.png')
+
+def train_net(training, test, size=512, epochs=400, batch_size=4, logging_interval=5, run_name=None, load_checkpoint=False, save_checkpoint=False):
     """Train network using the given training and test data.
     """
 
@@ -120,6 +137,7 @@ def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interv
             # Compute metrics
             accuracy = sess.run(accuracy_fn)
             auc = sess.run(auc_fn)
+            computed_classes = []
 
             if True:
                 # Every logging_interval epochs compute and save results on the test set
@@ -134,11 +152,18 @@ def train_net(training, test, size=512, epochs=120, batch_size=4, logging_interv
                         'labels:0': [lab],
                     })
 
+                    computed_classes.append(sess.run(output['classes'][0], {
+                        'input:0': img.reshape(1, size, size, -1),
+                        'labels:0': [lab],
+                    }))
+
                     print('Test image {} / {}'.format(ti + 1, len(test_images)), end='\r')
 
                 # Compute test metrics
                 test_accuracy = sess.run(accuracy_fn)
                 test_auc = sess.run(auc_fn)
+
+                plot_roc("Test Baseline", test_labels, computed_classes, e, color=colors[0], linestyle='--')
 
                 # Collect summaries for tensorboard
                 summ_data = sess.run(metrics_summary, {
